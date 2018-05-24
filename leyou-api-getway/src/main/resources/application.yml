@@ -1,0 +1,42 @@
+#端口号
+server:
+  port: 10010
+
+#服务名称
+spring:
+  application:
+    name: api-getway
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:10086/eureka
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true #ip优先，获取host时会获取到ip地址
+    ip-address: 127.0.0.1
+    instance-id: ${spring.application.name}:${server.port} #在eureka中的实例id
+
+#zull管理的网址前面要加api，起识别的作用，同时开启重试的功能
+zuul:
+  prefix: /api # 添加路由前缀
+  retryable: true
+  routes:
+    item-service: /item/** # 将商品微服务映射到/item/**
+
+#负载均衡的设置
+ribbon:
+  ConnectTimeout: 250 # 连接超时时间(ms)
+  ReadTimeout: 2000 # 通信超时时间(ms)
+  OkToRetryOnAllOperations: true # 是否对所有操作重试
+  MaxAutoRetriesNextServer: 1 # 同一服务不同实例的重试次数
+  MaxAutoRetries: 1 # 同一实例的重试次数
+
+#熔断机制
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000 # 熔断超时时长：10000ms
