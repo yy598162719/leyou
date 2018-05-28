@@ -32,6 +32,12 @@
         <fastDFS.client.version>1.26.1-RELEASE</fastDFS.client.version>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+    </dependencies>
     <!--版本管理-->
     <dependencyManagement>
         <dependencies>

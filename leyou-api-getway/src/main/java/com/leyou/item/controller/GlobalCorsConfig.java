@@ -1,4 +1,4 @@
-package com.leyou.controller;
+package com.leyou.item.controller;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
