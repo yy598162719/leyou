@@ -28,6 +28,7 @@ public class CategoryService {
         Category category = new Category();
         category.setParentId(pid);
         return categoryMapper.select(category);
+
     }
 
 
@@ -50,7 +51,7 @@ public class CategoryService {
         parent.setId(id);
         parent.setIsParent(true);
         int result = categoryMapper.updateByPrimaryKeySelective(parent);
-        return result;
+        return result ;
     }
 
 
