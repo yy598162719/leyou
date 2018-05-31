@@ -55,10 +55,28 @@ public class BrandController {
      * @return
      */
     @PostMapping
-    public ResponseEntity<Void> saveBrand(@RequestParam(value = "cids", required = false) List<Long> categories, Brand brand) {
+    public ResponseEntity<Void> saveBrand(@RequestParam(value = "cids") List<Long> categories, Brand brand) {
         this.brandService.saveBrand(categories, brand);
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
+    /**
+     *  品牌的修改
+     * @param categories
+     * @param brand
+     * @return
+     */
+    @PutMapping
+    public ResponseEntity<Void> updateBrand(@RequestParam(value = "cids") List<Long> categories, Brand brand) {
+        this.brandService.updateBrand(categories, brand);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteBrand(@RequestParam(value = "id")Long bid){
+        this.brandService.deleteBrand(bid);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
 
 }

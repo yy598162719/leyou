@@ -31,10 +31,15 @@ public class CategoryService {
 
     }
 
-
+    /**
+     * 根据品牌信息查询商品分类
+     * @param bid
+     * @return
+     */
     public List<Category> queryCategoryByBid(Long bid) {
         return this.categoryMapper.queryCategoryByBid(bid);
     }
+
     /**
      * 添加商品分类
      *
@@ -62,6 +67,7 @@ public class CategoryService {
      * @param name
      * @return
      */
+    @Transactional
     public int updateCategory(Long id, String name) {
         Category category = new Category();
         category.setId(id);
@@ -76,6 +82,7 @@ public class CategoryService {
      * @param id
      * @return
      */
+    @Transactional
     public int deleteCateGory(Long id) {
 
         Category category = categoryMapper.selectByPrimaryKey(id);
@@ -105,6 +112,7 @@ public class CategoryService {
      *
      * @param category
      */
+    @Transactional
     public void deleteChild(Category category) {
         //存在子节点，删除自己以及后辈
         if (category.getIsParent()) {

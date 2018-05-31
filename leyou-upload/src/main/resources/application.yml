@@ -1,15 +1,12 @@
 server:
-  port: 8081
+  port: 8082
 spring:
   application:
-    name: item-service
-  datasource:
-    url: jdbc:mysql://localhost:3306/leyou?autoReconnect=true&useUnicode=true&createDatabaseIfNotExist=true&characterEncoding=utf8&useSSL=true&serverTimezone=UTC
-    username: root
-    password: 123
-    hikari:
-      maximum-pool-size: 30
-      minimum-idle: 10
+    name: upload-service
+  servlet:
+    multipart:
+      max-file-size: 5MB # 限制文件上传的大小
+# Eureka
 eureka:
   client:
     service-url:
@@ -20,7 +17,11 @@ eureka:
     prefer-ip-address: true
     ip-address: 127.0.0.1
     instance-id: ${spring.application.name}:${server.port}
-
-mybatis:
-  configuration:
-    map-underscore-to-camel-case: true
+fdfs:
+  so-timeout: 1501
+  connect-timeout: 601
+  thumb-image: # 缩略图
+    width: 60
+    height: 60
+  tracker-list: # tracker地址
+    - 192.168.56.101:22122

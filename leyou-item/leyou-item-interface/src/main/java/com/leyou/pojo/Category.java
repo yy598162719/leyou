@@ -1,9 +1,6 @@
 package com.leyou.pojo;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -21,8 +18,10 @@ public class Category implements Serializable{
 
     private String name;
 
+    @Column(name = "parent_id")
     private Long parentId;
 
+    @Column(name = "is_parent")
     private Boolean isParent;
 
     private Integer sort;
@@ -52,11 +51,11 @@ public class Category implements Serializable{
     }
 
     public Boolean getIsParent() {
-        return isParent;
+        return this.isParent;
     }
 
-    public void setIsParent(Boolean parent) {
-        isParent = parent;
+    public void setIsParent(Boolean isParent) {
+        this.isParent = isParent;
     }
 
     public Integer getSort() {
