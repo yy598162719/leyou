@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -100,5 +101,30 @@ public class BrandService {
         brandMapper.deleteByPrimaryKey(bid);
         //维护中间表
         brandMapper.deleteCategoryBrandByBid(bid);
+    }
+
+    public String queryBrandNameByBid(Long brandId) {
+        Brand brand = this.brandMapper.selectByPrimaryKey(brandId);
+        return brand.getName();
+    }
+
+    /**
+     * 根据cid查到所有的品牌
+     * @param cid
+     * @return
+     */
+    public List<Brand> queryBrandsByCategoryId(Long cid) {
+        //先根据cid查到所有的品牌id
+        List<Long> bids = brandMapper.selectBrandIdsByCategoryId(cid);
+        //根据品牌id查到所有的信息
+        return this.queryBrandsByBids(bids);
+    }
+
+
+    /**
+     * 根据bid的集合查询商品信息
+     */
+    public List<Brand> queryBrandsByBids(List<Long> bids){
+        return this.brandMapper.selectByIdList(bids);
     }
 }

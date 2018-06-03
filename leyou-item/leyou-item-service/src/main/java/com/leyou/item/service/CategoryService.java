@@ -2,10 +2,12 @@ package com.leyou.item.service;
 
 import com.leyou.item.mapper.CategoryMapper;
 import com.leyou.pojo.Category;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -129,5 +131,20 @@ public class CategoryService {
                 this.categoryMapper.deleteByPrimaryKey(category);
         }
 
+    }
+
+    /**
+     * 根据多个cids，查询得到一个cname的字符串
+     * @param cids
+     * @return
+     */
+    public String queryCategoryNameByCids(ArrayList<Long> cids) {
+        List<Category> list = this.categoryMapper.selectByIdList(cids);
+        ArrayList<String> names = new ArrayList<>();
+        for (Category category : list) {
+            names.add(category.getName());
+        }
+        String cName = StringUtils.join(names, "/");
+        return cName;
     }
 }
