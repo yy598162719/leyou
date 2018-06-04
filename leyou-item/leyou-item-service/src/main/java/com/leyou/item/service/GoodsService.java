@@ -172,7 +172,7 @@ public class GoodsService {
             }
             //删除stock
             Example example = new Example(Stock.class);
-            example.createCriteria().andIn("sku_id",ids);
+            example.createCriteria().andIn("skuId",ids);
             this.stockMapper.deleteByExample(example);
             //删除spu
             this.skuMapper.delete(sku);
@@ -204,6 +204,27 @@ public class GoodsService {
         Long id = spu.getId();
         List<Sku> newSkus = goods.getSkus();
         addSkuAndStock(id, date, newSkus);
+    }
+
+    /**
+     * 查询sku的列表
+     * @param id
+     * @return
+     */
+    public List<Sku> querySkuList(Long id) {
+
+        List<Sku> skus = this.querySkusBySpuId(id);
+        /*根据skus的id去查库存*/
+        if (!CollectionUtils.isEmpty(skus)){
+            ArrayList<Long> ids = new ArrayList<>();
+            for (Sku sku : skus) {
+                ids.add(sku.getId());
+                Stock stock = this.stockMapper.selectByPrimaryKey(sku.getId());
+                sku.setStock(stock.getStock());
+            }
+
+        }
+        return  skus;
     }
 }
 

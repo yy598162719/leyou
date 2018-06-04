@@ -2,12 +2,15 @@ package com.leyou.item.controller;
 
 import com.leyou.item.Bo.GoodsBo;
 import com.leyou.item.service.GoodsService;
+import com.leyou.pojo.Sku;
 import com.leyou.pojo.SpuDetail;
 import com.netflix.ribbon.proxy.annotation.Http;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Qin PengCheng
@@ -72,11 +75,27 @@ public class GoodsController {
 
     }
 
+    /**
+     * 修改商品的方法
+     * @param goods
+     * @return
+     */
     @PutMapping
     public ResponseEntity<Void> updateGoods(@RequestBody GoodsBo goods){
         this.goodsService.updateGoods(goods);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+
+    /**
+     * 查询sku的方法
+     * @param id
+     * @return
+     */
+    @GetMapping("/sku/list")
+    public ResponseEntity<List<Sku>> querySkuList(@RequestParam("id")Long id){
+     List<Sku> skus =   this.goodsService.querySkuList(id);
+     return ResponseEntity.status(HttpStatus.OK).body(skus);
+    }
 
 }
