@@ -72,5 +72,11 @@ public class GoodsController {
 
     }
 
+    @PutMapping
+    public ResponseEntity<Void> updateGoods(@RequestBody GoodsBo goods){
+        this.goodsService.updateGoods(goods);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
 
 }

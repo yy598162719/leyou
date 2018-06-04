@@ -6,14 +6,16 @@ import com.leyou.pojo.Sku;
 import com.leyou.pojo.Spu;
 import com.leyou.pojo.SpuDetail;
 import com.leyou.pojo.Stock;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import tk.mybatis.mapper.entity.Example;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Qin PengCheng
@@ -63,12 +65,25 @@ public class GoodsService {
 
         //保存sku和store
         List<Sku> skus = goods.getSkus();
+        Long id = spu.getId();
 
+        addSkuAndStock(id, date, skus);
+
+    }
+
+    /**
+     * 添加sku和stock的方法
+     *
+     * @param id
+     * @param date
+     * @param skus
+     */
+    private void addSkuAndStock(Long id, Date date, List<Sku> skus) {
         for (Sku sku : skus) {
-            if(!sku.getEnable()){
+            if (!sku.getEnable()) {
                 continue;
             }
-            sku.setSpuId(spu.getId());
+            sku.setSpuId(id);
             sku.setEnable(true);
             sku.setCreateTime(date);
             sku.setLastUpdateTime(date);
@@ -81,7 +96,6 @@ public class GoodsService {
             stock.setSkuId(sku.getId());
             stockMapper.insertSelective(stock);
         }
-
     }
 
     /**
@@ -129,6 +143,7 @@ public class GoodsService {
 
     /**
      * 更改商品的上下架状态
+     *
      * @param id
      * @param selable
      */
@@ -137,6 +152,58 @@ public class GoodsService {
         spu.setId(id);
         spu.setSaleable(!selable);
         spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    /**
+     * 修改商品的方法
+     *
+     * @param goods
+     */
+    public void updateGoods(GoodsBo goods) {
+        //首先根据spu的id删除sku和stock
+        Sku sku = new Sku();
+        sku.setSpuId(goods.getId());
+        List<Sku> oldSkus = skuMapper.select(sku);
+        if (!CollectionUtils.isEmpty(oldSkus)){
+            //得到所有的id的集合
+            ArrayList<Long> ids = new ArrayList<>();
+            for (Sku skus : oldSkus) {
+                ids.add(skus.getId());
+            }
+            //删除stock
+            Example example = new Example(Stock.class);
+            example.createCriteria().andIn("sku_id",ids);
+            this.stockMapper.deleteByExample(example);
+            //删除spu
+            this.skuMapper.delete(sku);
+        }
+       /* ArrayList<Long> skuIds = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(oldSkus)) {
+            for (Sku s : oldSkus) {
+                skuIds.add(s.getId());
+            }
+            String str = StringUtils.join(oldSkus, ",");
+            this.stockMapper.deleteByIds(str);
+            this.skuMapper.deleteByIds(str);
+        }*/
+
+        //更新sku
+        Spu spu = new Spu();
+        BeanUtils.copyProperties(goods, spu);
+        long currentTimeMillis = System.currentTimeMillis();
+        Date date = new Date(currentTimeMillis);
+
+        spu.setSaleable(true);
+        spu.setValid(true);
+        spu.setLastUpdateTime(date);
+        spuMapper.updateByPrimaryKeySelective(spu);
+        //更新skuDetail
+        SpuDetail spuDetail = goods.getSpuDetail();
+        spuDetailMapper.updateByPrimaryKeySelective(spuDetail);
+        //添加sku和skuDetail
+        Long id = spu.getId();
+        List<Sku> newSkus = goods.getSkus();
+        addSkuAndStock(id, date, newSkus);
     }
 }
 
