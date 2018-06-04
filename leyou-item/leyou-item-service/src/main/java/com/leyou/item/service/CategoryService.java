@@ -138,7 +138,7 @@ public class CategoryService {
      * @param cids
      * @return
      */
-    public String queryCategoryNameByCids(ArrayList<Long> cids) {
+    public String queryCategoryNameByCids(List cids) {
         List<Category> list = this.categoryMapper.selectByIdList(cids);
         ArrayList<String> names = new ArrayList<>();
         for (Category category : list) {

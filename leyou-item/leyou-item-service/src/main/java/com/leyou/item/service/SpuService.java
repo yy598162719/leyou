@@ -7,11 +7,13 @@ import com.leyou.item.mapper.SpuMapper;
 import com.leyou.item.Bo.SpuBo;
 import com.leyou.pojo.Spu;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -54,19 +56,19 @@ public class SpuService {
         //新建一个集合，来接受cid的集合
             SpuBo spuBo = new SpuBo();
             //查询cname
-            ArrayList<Long> cids = new ArrayList<>();
+           /* ArrayList<Long> cids = new ArrayList<>();
             cids.add(spu.getCid1());
             cids.add(spu.getCid2());
-            cids.add(spu.getCid3());
-            String categoryName = categoryService.queryCategoryNameByCids(cids);
+            cids.add(spu.getCid3());*/
+           /*可以简化为*/
+
+            String categoryName = categoryService.queryCategoryNameByCids(Arrays.asList(spu.getCid1(),spu.getCid2(),spu.getCid3()));
             //查询bname
             String brandName = brandService.queryBrandNameByBid(spu.getBrandId());
             //封装bname，cname
             spuBo.setCname(categoryName);
             spuBo.setBname(brandName);
-            spuBo.setId(spu.getId());
-            spuBo.setTitle(spu.getTitle());
-            spuBo.setSaleable(spu.getSaleable());
+            BeanUtils.copyProperties(spu,spuBo);
             //将这个对象添加到集合中
             spuBos.add(spuBo);
         }
