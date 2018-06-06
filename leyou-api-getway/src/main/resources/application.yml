@@ -23,6 +23,7 @@ zuul:
   retryable: true
   routes:
     item-service: /item/** # 将商品微服务映射到/item/**
+    search-service: /search/** # 搜索的微服务
 
 #负载均衡的设置
 ribbon:

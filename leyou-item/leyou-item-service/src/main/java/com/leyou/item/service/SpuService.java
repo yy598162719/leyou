@@ -4,7 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.leyou.item.PageResult;
 import com.leyou.item.mapper.SpuMapper;
-import com.leyou.item.Bo.SpuBo;
+import com.leyou.bo.SpuBo;
 import com.leyou.pojo.Spu;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -42,7 +42,7 @@ public class SpuService {
         if (saleable != null) {
             criteria.andEqualTo("saleable", saleable);
         }
-        if (StringUtils.isBlank(key)) {
+        if (!StringUtils.isBlank(key)) {
             criteria.andLike("title", "%" + key + "%");
         }
         Page<Spu> pageInfo = (Page<Spu>) spuMapper.selectByExample(example);
@@ -62,7 +62,9 @@ public class SpuService {
             cids.add(spu.getCid3());*/
            /*可以简化为*/
 
-            String categoryName = categoryService.queryCategoryNameByCids(Arrays.asList(spu.getCid1(),spu.getCid2(),spu.getCid3()));
+            List list = categoryService.queryCategoryNameByCids(Arrays.asList(spu.getCid1(), spu.getCid2(), spu.getCid3()));
+            //将list拼接成字符串
+            String categoryName = StringUtils.join(list, "/");
             //查询bname
             String brandName = brandService.queryBrandNameByBid(spu.getBrandId());
             //封装bname，cname

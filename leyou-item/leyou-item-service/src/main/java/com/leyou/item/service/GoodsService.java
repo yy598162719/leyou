@@ -1,15 +1,13 @@
 package com.leyou.item.service;
 
-import com.leyou.item.Bo.GoodsBo;
+import com.leyou.bo.GoodsBo;
 import com.leyou.item.mapper.*;
 import com.leyou.pojo.Sku;
 import com.leyou.pojo.Spu;
 import com.leyou.pojo.SpuDetail;
 import com.leyou.pojo.Stock;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;

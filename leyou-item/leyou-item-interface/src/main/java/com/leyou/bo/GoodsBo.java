@@ -1,13 +1,9 @@
-package com.leyou.item.Bo;
+package com.leyou.bo;
 
 import com.leyou.pojo.Sku;
 import com.leyou.pojo.Spu;
 import com.leyou.pojo.SpuDetail;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.util.List;
 
 /**

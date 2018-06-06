@@ -57,7 +57,6 @@ public class SearchTest {
                "小米", 3499.00, "http://image.leyou.com/13123.jpg");
        itemRepository.save(item);
 
-
     }
 
     @Test
@@ -166,6 +165,9 @@ public class SearchTest {
         }
     }
 
+    /**
+     * 聚合为桶
+     */
     @Test
     public void testAgg(){
         NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
@@ -189,7 +191,6 @@ public class SearchTest {
             // 3.5、获取桶中的文档数量
             System.out.println(bucket.getDocCount());
         }
-
     }
 
     /**

@@ -134,17 +134,16 @@ public class CategoryService {
     }
 
     /**
-     * 根据多个cids，查询得到一个cname的字符串
+     * 根据多个cids，查询得到一个cname的集合
      * @param cids
      * @return
      */
-    public String queryCategoryNameByCids(List cids) {
+    public List queryCategoryNameByCids(List cids) {
         List<Category> list = this.categoryMapper.selectByIdList(cids);
         ArrayList<String> names = new ArrayList<>();
         for (Category category : list) {
             names.add(category.getName());
         }
-        String cName = StringUtils.join(names, "/");
-        return cName;
+        return names;
     }
 }

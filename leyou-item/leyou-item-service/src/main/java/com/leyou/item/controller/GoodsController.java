@@ -1,10 +1,9 @@
 package com.leyou.item.controller;
 
-import com.leyou.item.Bo.GoodsBo;
+import com.leyou.bo.GoodsBo;
 import com.leyou.item.service.GoodsService;
 import com.leyou.pojo.Sku;
 import com.leyou.pojo.SpuDetail;
-import com.netflix.ribbon.proxy.annotation.Http;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.leyou.item.Bo;
+package com.leyou.bo;
 
 import com.leyou.pojo.Spu;
 

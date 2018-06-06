@@ -69,6 +69,11 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
+    /**
+     * 根据id删除分类
+     * @param id
+     * @return
+     */
     @DeleteMapping("delete")
     public ResponseEntity<Void> deleteCategory(
             @RequestParam("id") Long id
@@ -96,5 +101,19 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
-
+    /**
+     * 根据分类id的集合查询分类名称的集合
+     * @param list
+     * @return
+     */
+    @GetMapping("names")
+    public ResponseEntity<List<String>> queryCategoryNamesBycids(
+            @RequestParam("ids") List<Long> list
+    ){
+        List names = this.categoryService.queryCategoryNameByCids(list);
+        if (names==null||names.size()<1){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(names);
+    }
 }

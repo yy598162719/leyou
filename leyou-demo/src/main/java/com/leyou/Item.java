@@ -8,17 +8,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @Document(indexName = "item",type = "docs",shards = 1,replicas = 0)
 public class Item {
 
-    public Item() {
-    }
-
-    public Item(Long id, String title, String category, String brand, Double price, String images) {
-        this.id = id;
-        this.title = title;
-        this.category = category;
-        this.brand = brand;
-        this.price = price;
-        this.images = images;
-    }
 
     @Id
     Long id;
@@ -38,6 +27,8 @@ public class Item {
     @Field(index = false,type = FieldType.keyword)
     String images; // 图片地址
 
+    public Item() {
+    }
     public Long getId() {
         return id;
     }
@@ -96,5 +87,13 @@ public class Item {
                 ", price=" + price +
                 ", images='" + images + '\'' +
                 '}';
+    }
+    public Item(Long id, String title, String category, String brand, Double price, String images) {
+        this.id = id;
+        this.title = title;
+        this.category = category;
+        this.brand = brand;
+        this.price = price;
+        this.images = images;
     }
 }
