@@ -2,7 +2,7 @@ package com.leyou.search.feign;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leyou.item.PageResult;
+import com.leyou.common.PageResult;
 import com.leyou.bo.SpuBo;
 import com.leyou.pojo.Sku;
 import com.leyou.pojo.SpuDetail;

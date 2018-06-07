@@ -2,7 +2,7 @@ package com.leyou.item.service;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.leyou.item.PageResult;
+import com.leyou.common.PageResult;
 import com.leyou.item.mapper.SpuMapper;
 import com.leyou.bo.SpuBo;
 import com.leyou.pojo.Spu;

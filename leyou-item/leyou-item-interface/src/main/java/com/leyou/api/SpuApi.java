@@ -1,7 +1,7 @@
 package com.leyou.api;
 
 
-import com.leyou.item.PageResult;
+import com.leyou.common.PageResult;
 import com.leyou.bo.SpuBo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

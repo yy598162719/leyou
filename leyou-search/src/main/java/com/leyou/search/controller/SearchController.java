@@ -1,6 +1,6 @@
 package com.leyou.search.controller;
 
-import com.leyou.item.PageResult;
+import com.leyou.common.PageResult;
 import com.leyou.search.pojo.Goods;
 import com.leyou.search.service.SearchService;
 import com.leyou.search.vo.SearchRequest;

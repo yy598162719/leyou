@@ -19,16 +19,13 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>5.0.5.RELEASE</version>
+            <artifactId>spring-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.leyou.common</groupId>
             <artifactId>leyou-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
-
     </dependencies>
 
 

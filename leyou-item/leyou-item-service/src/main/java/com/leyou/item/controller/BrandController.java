@@ -1,10 +1,8 @@
 package com.leyou.item.controller;
 
-import com.github.pagehelper.Page;
-import com.leyou.item.PageResult;
+import com.leyou.common.PageResult;
 import com.leyou.item.service.BrandService;
 import com.leyou.pojo.Brand;
-import com.mysql.jdbc.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
