@@ -181,7 +181,7 @@ public class SearchService {
             queryBuilder.withSort(SortBuilders.fieldSort(sortBy).order(desc ? SortOrder.DESC : SortOrder.ASC));
         }
         //过滤
-        queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"id", "skus", "subtitle"}, null));
+        queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"id", "skus", "subTitle"}, null));
         //分页
         queryBuilder.withPageable(PageRequest.of(page - 1, size));
     }
