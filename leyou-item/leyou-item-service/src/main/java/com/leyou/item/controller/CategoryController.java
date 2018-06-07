@@ -116,4 +116,15 @@ public class CategoryController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(names);
     }
+
+    @GetMapping("categories")
+    public ResponseEntity<List<Category>> queryCategoriesByCids(
+            @RequestParam("cids") List<Long> cids
+    ){
+      List<Category> categories  =  this.categoryService.queryCategoriesByCids(cids);
+      if (categories==null||categories.size()<1){
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+      }
+        return ResponseEntity.status(HttpStatus.OK).body(categories);
+    }
 }

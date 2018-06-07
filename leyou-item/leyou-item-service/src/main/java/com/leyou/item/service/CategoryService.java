@@ -146,4 +146,9 @@ public class CategoryService {
         }
         return names;
     }
+
+    public List<Category> queryCategoriesByCids(List<Long> cids) {
+        List<Category> categories = this.categoryMapper.selectByIdList(cids);
+        return categories;
+    }
 }

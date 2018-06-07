@@ -82,6 +82,11 @@ public class BrandController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    /**
+     * 根据分类的集合查出所有的品牌
+     * @param cid
+     * @return
+     */
     @GetMapping("cid/{id}")
     public ResponseEntity<List<Brand>> queryBrandsByCategoryId(@PathVariable(value = "id")Long cid
     ){
@@ -91,4 +96,19 @@ public class BrandController {
       }
       return ResponseEntity.status(HttpStatus.OK).body(list);
     }
+
+    /**
+     * 根据品牌id的集合查询所有的品牌
+     * @param brandIds
+     * @return
+     */
+    @GetMapping("bids")
+    public ResponseEntity<List<Brand>> queryBrandsByBrandIds(@RequestParam("bids") List<Long> brandIds){
+        List<Brand> brands = this.brandService.queryBrandsByBids(brandIds);
+        if (brands==null||brands.size()<1){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(brands);
+    }
+
 }
