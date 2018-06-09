@@ -1,7 +1,6 @@
 package com.leyou.search.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.leyou.common.PageResult;
 import com.leyou.pojo.Brand;
 import com.leyou.pojo.Category;
 import com.leyou.search.feign.BrandClient;
@@ -13,38 +12,33 @@ import com.leyou.search.vo.SearchRequest;
 import com.leyou.search.vo.SearchResult;
 import com.leyou.utils.JsonUtils;
 import com.leyou.utils.NumberUtils;
-import com.vividsolutions.jts.index.strtree.Interval;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.histogram.InternalHistogram;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.metrics.stats.InternalStats;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.xmlunit.util.Mapper;
 
-import java.security.Key;
 import java.util.*;
 
+/**
+ * @author: HuYi.Zhang
+ * @create: 2018-06-06 12:19
+ **/
 @Service
 public class SearchService {
 
@@ -52,287 +46,73 @@ public class SearchService {
     private GoodsRepository goodsRepository;
 
     @Autowired
-    private BrandClient brandClient;
-
-    @Autowired
     private CategoryClient categoryClient;
 
     @Autowired
-    private SpecClient specClient;
+    private BrandClient brandsClient;
 
     @Autowired
-    private ElasticsearchTemplate esTemplate;
+    private SpecClient specificationClient;
 
-    private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
+    private static Logger logger = LoggerFactory.getLogger(SearchService.class);
 
-    public PageResult<Goods> search2(SearchRequest request) {
-        String key = request.getKey();
-        // 判断是否有搜索条件，如果没有，直接返回null。不允许搜索全部商品
-        if (StringUtils.isBlank(key)) {
-            return null;
-        }
-        // 准备分页参数
-        int page = request.getPage();
-        int size = request.getSize();
-
-        // 构建查询条件
+    public SearchResult<Goods> search(SearchRequest request) {
+        // 创建查询构建器
         NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
-        // 1、通过sourceFilter设置返回的结果字段,我们只需要id、skus、subTitle
-        queryBuilder.withSourceFilter(new FetchSourceFilter(
-                new String[]{"id", "skus", "subTitle"}, null));
-        // 2、对key进行全文检索查询
-        queryBuilder.withQuery(QueryBuilders.matchQuery("all", key).operator(Operator.AND));
-        // 3、分页
-        queryBuilder.withPageable(PageRequest.of(page, size));
+        // 1、构建查询条件
+        // 1.1.对搜索的结果进行过滤
+        queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"id", "subTitle", "skus"}, null));
+        // 1.2.基本查询
+        QueryBuilder basicQuery = this.buildBasicQueryWithFilter(request);
+        queryBuilder.withQuery(basicQuery);
+
+        // 1.3、分页
+        queryBuilder.withPageable(PageRequest.of(request.getPage() - 1, request.getSize()));
+        // 1.4、聚合
+        // 对分类聚合
+        String categoryAggName = "categoryAgg";
+        String brandAggName = "brandAgg";
+        queryBuilder.addAggregation(AggregationBuilders.terms(categoryAggName).field("cid3"));
+        queryBuilder.addAggregation(AggregationBuilders.terms(brandAggName).field("brandId"));
+
+        // 2、查询
+        AggregatedPage<Goods> aggResult =
+                (AggregatedPage<Goods>) this.goodsRepository.search(queryBuilder.build());
 
 
-        // 4、查询，获取结果
-        Page<Goods> pageInfo = this.goodsRepository.search(queryBuilder.build());
+        // 3、解析结果：
+        // 3.1、总条数和总页数
+        long total = aggResult.getTotalElements();
+        long totalPage = (total + request.getSize() - 1) / request.getSize();
 
-        // 封装结果并返回
-        return new PageResult<>(pageInfo.getTotalElements(), pageInfo.getContent());
+        // 3.2、解析商品分类
+        List<Category> categories = getCategoryAgg(aggResult, categoryAggName);
+        // 3.3、解析品牌
+        List<Brand> brands = getBrandAgg(aggResult, brandAggName);
+
+        // 3.4、处理规格参数
+        List<Map<String, Object>> specs = null;
+        if (categories.size() == 1) {
+            specs = getSpecifications(categories.get(0).getId(), basicQuery);
+        }
+
+        return new SearchResult<>(total, totalPage, aggResult.getContent(), categories, brands, specs);
     }
 
-
-    public SearchResult<Goods> search3(SearchRequest searchRequest) {
-        //构建一个查询对象
-        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder();
-        if (searchRequest.getKey() == null) {
-            return null;
-        }
-        //基本查询
-        this.searchWithPageAndSort(searchRequest, searchQueryBuilder);
-        //桶的名称，随意
-        String categoryAggName = "category";
-        String brandName = "brand";
-        //聚合为桶
-        searchQueryBuilder.addAggregation(AggregationBuilders.terms(categoryAggName).field("cid3"));
-        searchQueryBuilder.addAggregation(AggregationBuilders.terms(brandName).field("brandId"));
-        //开始查询
-        AggregatedPage<Goods> pageInfo = (AggregatedPage<Goods>) this.goodsRepository.search(searchQueryBuilder.build());
-
-        //获取每页的大小，用在后面的求总页数
-        Integer size = searchRequest.getSize();
-
-        //查询后的结果处理
-        SearchResult searchResult = new SearchResult();
-        searchResult.setTotal(pageInfo.getTotalElements());
-        searchResult.setItems(pageInfo.getContent());
-        Long total = pageInfo.getTotalElements();
-        Long totalpage = total % size.longValue() == 0 ? total / size : total.intValue() / size + 1;
-        searchResult.setTotalPage(totalpage);
-        //解析聚合的结果
-        List<Category> categories = this.getCategopryAggResult(pageInfo, categoryAggName);
-        List<Brand> brands = this.getBrandAggResult(pageInfo, brandName);
-        searchResult.setCategories(categories);
-        searchResult.setBrands(brands);
-
-        return searchResult;
-    }
-
-    /**
-     * 解析品牌的聚合结果
-     *
-     * @param pageInfo
-     * @param brandName
-     * @return
-     */
-    private List<Brand> getBrandAggResult(AggregatedPage<Goods> pageInfo, String brandName) {
-        //得到分桶的结果
-        LongTerms longTerms = (LongTerms) pageInfo.getAggregation(brandName);
-        //创建一个id的集合。来接受各个桶里的品牌id
-        List<Long> ids = new ArrayList<>();
-        for (LongTerms.Bucket bucket : longTerms.getBuckets()) {
-            ids.add(bucket.getKeyAsNumber().longValue());
-        }
-        if (ids==null||ids.size()<1){
-            return null;
-        }
-        //根据id的集合去查询出所有的品牌的集合
-        ResponseEntity<List<Brand>> brandListResponseEntity = this.brandClient.queryBrandsByBrandIds(ids);
-        if (!brandListResponseEntity.hasBody()) {
-            logger.error("查询品牌出现错误，id为" + ids);
-            return null;
-        }
-        return brandListResponseEntity.getBody();
-    }
-
-
-    /**
-     * 解析分类的聚合结果
-     *
-     * @param pageInfo
-     * @param categoryAggName
-     * @return
-     */
-    private List<Category> getCategopryAggResult(AggregatedPage<Goods> pageInfo, String categoryAggName) {
-        //获取分桶的结果
-        LongTerms longTerms = (LongTerms) pageInfo.getAggregation(categoryAggName);
-        //创建一个list分桶解析出来的id
-        List<Long> cids = new ArrayList<>();
-        for (LongTerms.Bucket bucket : longTerms.getBuckets()) {
-            cids.add(bucket.getKeyAsNumber().longValue());
-        }
-        if (cids==null&&cids.size()<1){
-            return null;
-        }
-        //调用微服务，查询所有的商品分类集合
-        ResponseEntity<List<Category>> categoryListResponseEntity = this.categoryClient.queryCategoriesByCids(cids);
-        if (!categoryListResponseEntity.hasBody()) {
-            logger.error("查询品牌的id出现错误，id为" + cids);
-            return null;
-        }
-        return categoryListResponseEntity.getBody();
-    }
-
-    /**
-     * 根据条件进行基本的查询
-     *
-     * @param searchRequest
-     * @param queryBuilder
-     * @return
-     */
-    public void searchWithPageAndSort(SearchRequest searchRequest, NativeSearchQueryBuilder queryBuilder) {
-        //获取关键词
-        String key = searchRequest.getKey();
-        //获取排序方式
-        Boolean desc = searchRequest.getDescending();
-        String sortBy = searchRequest.getSortBy();
-
-        //获取分页查询的参数
-        Integer page = searchRequest.getPage();
-        Integer size = searchRequest.getSize();
-
-        //根据key分词查询
-        queryBuilder.withQuery(QueryBuilders.matchQuery("all", key));
-        //排序
-        if (StringUtils.isNotBlank(sortBy)) {
-            queryBuilder.withSort(SortBuilders.fieldSort(sortBy).order(desc ? SortOrder.DESC : SortOrder.ASC));
-        }
-        //过滤
-        queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"id", "skus", "subTitle"}, null));
-        //分页
-        queryBuilder.withPageable(PageRequest.of(page - 1, size));
-    }
-
-
-    public SearchResult<Goods> search(SearchRequest searchRequest) {
-        //获取查询的条件
-        String key = searchRequest.getKey();
-        //如果查询的条件不存在，则返回null
-        if (StringUtils.isBlank(key)) {
-            return null;
-        }
-        //首先构建一个本地查询
-        NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
-
-        queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"id", "skus", "subTitle"}, null));
-        QueryBuilder query = this.getBasicQueryBuilder(searchRequest);
-        queryBuilder.withQuery(query);
-      /*  //得到分词条件
-        MatchQueryBuilder query = QueryBuilders.matchQuery("all", key);
-        queryBuilder.withQuery(query);*/
-        //过滤字段
-        //排序条件
-        String sortBy = searchRequest.getSortBy();
-        Boolean desc = searchRequest.getDescending();
-        if (StringUtils.isNotBlank(sortBy)) {
-            queryBuilder.withSort(SortBuilders.fieldSort(sortBy).order(desc ? SortOrder.DESC : SortOrder.ASC));
-        }
-        //获取分页条件
-        Integer page = searchRequest.getPage();
-        Integer size = searchRequest.getSize();
-        if (page < 1) {
-            //小于1肯定是人为操作，直接返回null
-            return null;
-        }
-        queryBuilder.withPageable(PageRequest.of(page, size));
-        //品牌和分类肯定要聚合
-        String categories = "category";
-        //如果分类小于1个，对过滤条件进行聚合
-        String brands = "brand";
-        //将分类和品牌聚合为桶
-        queryBuilder.addAggregation(AggregationBuilders.terms(categories).field("cid3"));
-        queryBuilder.addAggregation(AggregationBuilders.terms(brands).field("brandId"));
-        //得到结果
-        AggregatedPage<Goods> pageInfo = (AggregatedPage<Goods>) this.goodsRepository.search(queryBuilder.build());
-        //封装数据到searchResult
-        SearchResult<Goods> goodsSearchResult = new SearchResult<>();
-        //页面展示的数据体
-        goodsSearchResult.setItems(pageInfo.getContent());
-        //总页数
-        Integer totalPages = pageInfo.getTotalPages();
-        Long total = pageInfo.getTotalElements();
-        goodsSearchResult.setTotalPage((total + size - 1) / size);
-        //总记录数
-        goodsSearchResult.setTotal(total);
-        //品牌数据
-        List<Brand> brandsList = this.getBrandAggResult(pageInfo, brands);
-        goodsSearchResult.setBrands(brandsList);
-        //分类数据
-        List<Category> categoriesList = this.getCategopryAggResult(pageInfo, categories);
-        goodsSearchResult.setCategories(categoriesList);
-        //在分类聚合完成之后，判断分类的个数是否等于1个，如果是，则显示过滤条件
-        if (categoriesList.size() == 1) {
-            //得到过滤条件
-            List<Map<String, Object>> specs = this.getSpecsAggResult(query, categoriesList.get(0).getId());
-            //将结果添加到searchResult
-            goodsSearchResult.setSpecs(specs);
-        }
-        return goodsSearchResult;
-    }
-
-    /**
-     * 过滤查询
-     *
-     * @param searchRequest
-     * @return
-     */
-    private QueryBuilder getBasicQueryBuilder(SearchRequest searchRequest) {
-      /*  //基本查询构造器
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        //得到查询条件
-        String key = searchRequest.getKey();
-        //查询基本分词
-        boolQueryBuilder.must(QueryBuilders.matchQuery("all", key).operator(Operator.AND));
-        //过滤查询构造器
-        BoolQueryBuilder filterQueryBuilder = QueryBuilders.boolQuery();
-        //得到过滤条件
-        Map<String, String> filterMap = searchRequest.getFilter();
-        Set<Map.Entry<String, String>> entries = filterMap.entrySet();
-        for (Map.Entry<String, String> entry : entries) {
-            String keys = entry.getKey();
-            String value = entry.getValue();
-            String regex = "^(\\d+\\.?\\d*)-(\\d+\\.?\\d*)$";
-            //数值类型的用范围查询
-            if (value.matches(regex)) {
-                Double[] doubles = NumberUtils.searchNumber(value, regex);
-                filterQueryBuilder.must(QueryBuilders.rangeQuery("specs." + keys).gte(doubles[0]).lt(doubles[1]));
-            } else {
-                //字符串类型的用term查询
-                if ("cid3".equals(keys) || "brandId".equals(keys)) {
-                    filterQueryBuilder.must(QueryBuilders.termQuery(key, value));
-                } else {
-                    filterQueryBuilder.must(QueryBuilders.termQuery("specs." + key+".keyword", value));
-                }
-            }
-        }
-        //返回构造器
-        boolQueryBuilder.filter(filterQueryBuilder);
-        return boolQueryBuilder;
-*/
+    // 构建基本查询条件
+    private QueryBuilder buildBasicQueryWithFilter(SearchRequest request) {
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
         // 基本查询条件
-        queryBuilder.must(QueryBuilders.matchQuery("all", searchRequest.getKey()).operator(Operator.AND));
+        queryBuilder.must(QueryBuilders.matchQuery("all", request.getKey()).operator(Operator.AND));
         // 过滤条件构建器
         BoolQueryBuilder filterQueryBuilder = QueryBuilders.boolQuery();
         // 整理过滤条件
-        Map<String, String> filter = searchRequest.getFilter();
+        Map<String, String> filter = request.getFilter();
         for (Map.Entry<String, String> entry : filter.entrySet()) {
             // 判断是否是数值类型
             String key = entry.getKey();
-            // 判断是否是数值类型
             String value = entry.getValue();
+
             String regex = "^(\\d+\\.?\\d*)-(\\d+\\.?\\d*)$";
 
             if (value.matches(regex)) {
@@ -351,94 +131,96 @@ public class SearchService {
         queryBuilder.filter(filterQueryBuilder);
 
         return queryBuilder;
-
     }
 
-    private List<Map<String, Object>> getSpecsAggResult(QueryBuilder query, Long id) {
-        //根据id得到规格模版
-        ResponseEntity<String> specResponseEntity = this.specClient.querySpecificationsBycid(id);
-        if (!specResponseEntity.hasBody()) {
-            logger.error("该分类没有规格模版");
+    private List<Map<String, Object>> getSpecifications(Long id, QueryBuilder basicQuery) {
+        // 1、根据分类查询规格
+        ResponseEntity<String> specResp = this.specificationClient.querySpecificationsBycid(id);
+        if (!specResp.hasBody()) {
+            logger.error("查询规格参数出错，cid={}", id);
             return null;
         }
-        //得到模版中的可搜索属性
-        String spec = specResponseEntity.getBody();
-        //将spec的json转为集合
-        List<Map<String, Object>> specList = null;
+        String jsonSpec = specResp.getBody();
+        // 将规格反序列化为集合
+        List<Map<String, Object>> specs = null;
         try {
-            specList = JsonUtils.nativeRead(spec, new TypeReference<List<Map<String, Object>>>() {
+            specs = JsonUtils.nativeRead(jsonSpec, new TypeReference<List<Map<String, Object>>>() {
             });
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("反序列化json失败");
+            logger.error("解析规格参数json出错，json={}", jsonSpec, e);
+            return null;
         }
 
-        //准备好两个仓库，分别存贮字符串类型和数字类型
-        Map<String, String> numericSpec = new HashMap<>();
-        Set<String> stringSpec = new HashSet<>();
-        //遍历spec
-        for (Map<String, Object> stringObjectMap : specList) {
-            List<Map<String, Object>> params = (List<Map<String, Object>>) stringObjectMap.get("params");
+
+        // 2、过滤出可以搜索的哪些规格参数的名称，分成数值类型、字符串类型
+        // 准备集合，保存字符串规格参数名
+        Set<String> strSpec = new HashSet<>();
+        // 准备map，保存数值规格参数名及单位
+        Map<String, String> numericalUnits = new HashMap<>();
+        // 解析规格
+        for (Map<String, Object> spec : specs) {
+            List<Map<String, Object>> params = (List<Map<String, Object>>) spec.get("params");
             for (Map<String, Object> param : params) {
-                //得到可搜索的属性
-                if (param.get("searchable") != null && (Boolean) param.get("searchable")) {
-                    //如果是数字类型的
-                    if (param.get("numerical") != null && (Boolean) param.get("numerical")) {
-                        numericSpec.put(param.get("k").toString(), param.get("unit").toString());
+                Boolean searchable = (Boolean) param.get("searchable");
+                if (searchable) {
+                    // 判断是否是数值类型
+                    if (param.containsKey("numerical") && (boolean) param.get("numerical")) {
+                        numericalUnits.put(param.get("k").toString(), param.get("unit").toString());
                     } else {
-                        stringSpec.add(param.get("k").toString());
+                        strSpec.add(param.get("k").toString());
                     }
                 }
             }
-
         }
-        //字符串类型的得到interval
-        Map<String, Double> intervalMap = this.getIntervalMap(id, numericSpec);
-        //创建本地的查询条件
+
+        // 3、聚合计算数值类型的interval
+        Map<String, Double> numericalInterval = getNumericalInterval(id, numericalUnits.keySet());
+
+        // 4、利用interval聚合计算数值类型的分段
+        // 5、对字符串类型的参数进行聚合
+        return this.aggForSpec(strSpec, numericalInterval, numericalUnits, basicQuery);
+    }
+
+    @Autowired
+    private ElasticsearchTemplate template;
+
+    // 根据规格参数，聚合得出过滤条件
+    private List<Map<String, Object>> aggForSpec(Set<String> strSpec, Map<String, Double> numericalInterval,
+                                                 Map<String, String> numericalUnits, QueryBuilder query) {
+        List<Map<String, Object>> specs = new ArrayList<>();
+        // 准备查询条件
         NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
-        //数值型用interval和key做阶梯聚合
-        Set<String> intervalSet = intervalMap.keySet();
         queryBuilder.withQuery(query);
-        for (String key : intervalSet) {
+        // 聚合数值类型
+        for (Map.Entry<String, Double> entry : numericalInterval.entrySet()) {
             queryBuilder.addAggregation(
-                    AggregationBuilders
-                            .histogram(key)
-                            .field("specs." + key)
-                            .interval(intervalMap.get(key))
-                            .minDocCount(1));
-        }
-        //字符串也聚合
- /*       for (String str : stringSpec) {
-            queryBuilder.addAggregation(
-                    AggregationBuilders
-                            .terms(str)
-                                .field("specs."+str)
-                                    .minDocCount(1)
+                    AggregationBuilders.histogram(entry.getKey())
+                            .field("specs." + entry.getKey())
+                            .interval(entry.getValue())
+                            .minDocCount(1)
             );
-        }*/
-
+        }
         // 聚合字符串
-        for (String key : stringSpec) {
+        for (String key : strSpec) {
             queryBuilder.addAggregation(
                     AggregationBuilders.terms(key).field("specs." + key + ".keyword"));
         }
 
-        List<Map<String, Object>> specs = new ArrayList<>();
-
-        //解析聚合结果，封装数据
         // 解析聚合结果
-        Map<String, Aggregation> aggs = this.esTemplate.query(queryBuilder.build(),
-                SearchResponse::getAggregations).asMap();
+        Map<String, Aggregation> aggs = this.template.query(
+                queryBuilder.build(),SearchResponse::getAggregations).asMap();
+
         // 解析数值类型
-        intervalMap.entrySet().forEach(entry -> {
-            Map<String, Object> spec3 = new HashMap<>();
+        for (Map.Entry<String, Double> entry : numericalInterval.entrySet()) {
+            Map<String, Object> spec = new HashMap<>();
             String key = entry.getKey();
-            spec3.put("k", key);
-            spec3.put("unit", numericSpec.get(key));
+            spec.put("k", key);
+            spec.put("unit", numericalUnits.get(key));
+            // 获取聚合结果
             InternalHistogram histogram = (InternalHistogram) aggs.get(key);
-            spec3.put("options", histogram.getBuckets().stream().map(bucket -> {
+            spec.put("options", histogram.getBuckets().stream().map(bucket -> {
                 Double begin = (double) bucket.getKey();
-                Double end = begin + intervalMap.get(key);
+                Double end = begin + numericalInterval.get(key);
                 // 对begin和end取整
                 if (NumberUtils.isInt(begin) && NumberUtils.isInt(end)) {
                     // 确实是整数，需要取整
@@ -450,49 +232,47 @@ public class SearchService {
                     return begin + "-" + end;
                 }
             }));
-            specs.add(spec3);
-        });
+            specs.add(spec);
+        }
+
         // 解析字符串类型
-        stringSpec.forEach(key -> {
-            Map<String, Object> spec2 = new HashMap<>();
-            spec2.put("k", key);
+        strSpec.forEach(key -> {
+            Map<String, Object> spec = new HashMap<>();
+            spec.put("k", key);
             StringTerms terms = (StringTerms) aggs.get(key);
-            spec2.put("options", terms.getBuckets().stream().map(bucket -> bucket.getKeyAsString()));
-            specs.add(spec2);
+            spec.put("options", terms.getBuckets().stream().map(bucket -> bucket.getKeyAsString()));
+            specs.add(spec);
         });
         return specs;
-
     }
 
-    private Map<String, Double> getIntervalMap(Long cid, Map<String, String> numericSpec) {
-        //返回值是一个string，double类型的
+    // 聚合得到interval
+    private Map<String, Double> getNumericalInterval(Long cid, Set<String> keySet) {
         Map<String, Double> numbericalSpecs = new HashMap<>();
+        // 准备查询条件
         NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
-        //构建查询条件
-        queryBuilder.withQuery(QueryBuilders.termQuery("cid3", cid.toString())).withSourceFilter(new FetchSourceFilter(new String[]{""}, null));
-        Set<String> keySet = numericSpec.keySet();
+        // 不查询任何数据
+        queryBuilder.withQuery(QueryBuilders.termQuery("cid3", cid.toString()))
+                .withSourceFilter(new FetchSourceFilter(new String[]{""}, null))
+                .withPageable(PageRequest.of(0, 1));
+        // 添加stats类型的聚合
         for (String key : keySet) {
             queryBuilder.addAggregation(AggregationBuilders.stats(key).field("specs." + key));
         }
-        // 添加stats类型的聚合
-      /*  keySet.forEach(key -> {
-            queryBuilder.addAggregation(AggregationBuilders.stats(key).field("specs." + key));
-        });*/
-        Map<String, Aggregation> aggs = this.esTemplate.query(queryBuilder.build(),
-                SearchResponse::getAggregations).asMap();
-        // 解析聚合结果
-        keySet.forEach(key -> {
-            InternalStats stats = (InternalStats) aggs.get(key);
-            numbericalSpecs.put(key, getInterval(stats.getMin(), stats.getMax(), stats.getSum()));
-        });
-        return numbericalSpecs;
-       /* AggregatedPage<Goods> aggregatedPage = (AggregatedPage<Goods>) this.goodsRepository.search(queryBuilder.build());
+        Map<String, Aggregation> aggs = this.template.query(queryBuilder.build(),
+                new ResultsExtractor<Map<String, Aggregation>>() {
+                    @Override
+                    public Map<String, Aggregation> extract(SearchResponse response) {
+                        return response.getAggregations().asMap();
+                    }
+                });
 
-        for (String s : keySet) {
-            InternalStats agg = (InternalStats) aggregatedPage.getAggregation(s);
-            double interval = this.getInterval(agg.getMin(), agg.getMax(), agg.getSum());
-            IntervalMap.put(s,interval);
-        }*/
+        for (String key : keySet) {
+            InternalStats stats = (InternalStats) aggs.get(key);
+            double interval = this.getInterval(stats.getMin(), stats.getMax(), stats.getSum());
+            numbericalSpecs.put(key, interval);
+        }
+        return numbericalSpecs;
     }
 
     // 根据最小值，最大值，sum计算interval
@@ -509,5 +289,40 @@ public class SearchService {
             // 是小数,我们只保留一位小数
             return NumberUtils.scale(interval, 1);
         }
+    }
+
+    private List<Brand> getBrandAgg(AggregatedPage<Goods> aggResult, String brandAggName) {
+        LongTerms terms = (LongTerms) aggResult.getAggregation(brandAggName);
+        List<Long> ids = new ArrayList<>();
+        for (LongTerms.Bucket bucket : terms.getBuckets()) {
+            ids.add(bucket.getKeyAsNumber().longValue());
+        }
+        ResponseEntity<List<Brand>> resp = this.brandsClient.queryBrandsByBrandIds(ids);
+        if (resp.hasBody()) {
+            return resp.getBody();
+        }
+        return null;
+    }
+
+    private List<Category> getCategoryAgg(AggregatedPage<Goods> aggResult, String categoryAggName) {
+        LongTerms terms = (LongTerms) aggResult.getAggregation(categoryAggName);
+        List<Long> ids = new ArrayList<>();
+        for (LongTerms.Bucket bucket : terms.getBuckets()) {
+            ids.add(bucket.getKeyAsNumber().longValue());
+        }
+        // 获取分类名称
+        ResponseEntity<List<String>> resp = this.categoryClient.queryCategoryNamesBycids(ids);
+        if (!resp.hasBody()) {
+            return null;
+        }
+        List<String> names = resp.getBody();
+        List<Category> categories = new ArrayList<>();
+        for (int i = 0; i < ids.size(); i++) {
+            Category c = new Category();
+            c.setId(ids.get(i));
+            c.setName(names.get(i));
+            categories.add(c);
+        }
+        return categories;
     }
 }

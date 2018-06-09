@@ -117,6 +117,11 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body(names);
     }
 
+    /**
+     * 根据分类的cid查询所有的分类对象
+     * @param cids
+     * @return
+     */
     @GetMapping("categories")
     public ResponseEntity<List<Category>> queryCategoriesByCids(
             @RequestParam("cids") List<Long> cids
@@ -125,6 +130,16 @@ public class CategoryController {
       if (categories==null||categories.size()<1){
           return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
       }
+        return ResponseEntity.status(HttpStatus.OK).body(categories);
+    }
+
+    @GetMapping("level/{id}")
+    public ResponseEntity<List<Category>> queryParentByCid3(
+            @PathVariable("id") Long id){
+        List<Category> categories  = this.categoryService.queryParentByCid3(id);
+        if (categories==null&&categories.size()<1){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         return ResponseEntity.status(HttpStatus.OK).body(categories);
     }
 }

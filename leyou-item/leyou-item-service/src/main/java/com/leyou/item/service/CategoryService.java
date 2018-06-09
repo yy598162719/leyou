@@ -151,4 +151,16 @@ public class CategoryService {
         List<Category> categories = this.categoryMapper.selectByIdList(cids);
         return categories;
     }
+
+    public List<Category> queryParentByCid3(Long id) {
+        //创建一个list集合来接收
+        List<Category> categories = new ArrayList<>();
+        Category category3 = this.categoryMapper.selectByPrimaryKey(id);
+        Category category2 = this.categoryMapper.selectByPrimaryKey(category3.getParentId());
+        Category category1 = this.categoryMapper.selectByPrimaryKey(category2.getParentId());
+        categories.add(category1);
+        categories.add(category2);
+        categories.add(category3);
+        return categories;
+    }
 }
