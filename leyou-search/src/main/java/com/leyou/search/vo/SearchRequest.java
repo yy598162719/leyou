@@ -1,5 +1,7 @@
 package com.leyou.search.vo;
 
+import java.util.Map;
+
 public class SearchRequest {
     private String key;// 搜索条件
 
@@ -8,6 +10,16 @@ public class SearchRequest {
     private String sortBy;//排序条件
 
     private Boolean descending;//升序降序
+
+    private Map<String,String> filter;//过滤条件
+
+    public Map<String, String> getFilter() {
+        return filter;
+    }
+
+    public void setFilter(Map<String, String> filter) {
+        this.filter = filter;
+    }
 
     private static final Integer DEFAULT_SIZE = 20;// 每页大小，不从页面接收，而是固定大小
     private static final Integer DEFAULT_PAGE = 1;// 默认页

@@ -35,7 +35,19 @@ public class SpecificationsController
        return ResponseEntity.status(HttpStatus.OK).body(sepcifications);
     }
 
-
+    /**
+     * 根据分类id查询商品的规格（对外接口）
+     * @param cid
+     * @return
+     */
+    @GetMapping("cid")
+    public ResponseEntity<String> querySpecificationsBycid(@RequestParam("cid")Long cid){
+        String sepcifications =  specificationsService.querySpecifications(cid);
+        if (StringUtils.isBlank(sepcifications)){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(sepcifications);
+    }
     /**
      * 添加板板的方法
      * @param specification
