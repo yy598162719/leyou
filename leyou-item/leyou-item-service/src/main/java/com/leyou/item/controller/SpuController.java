@@ -3,10 +3,13 @@ package com.leyou.item.controller;
 import com.leyou.common.PageResult;
 import com.leyou.item.service.SpuService;
 import com.leyou.bo.SpuBo;
+import com.leyou.pojo.Spu;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.swing.plaf.SpinnerUI;
 
 /**
  * @author Qin PengCheng
@@ -67,5 +70,20 @@ private Long total;// 总条数
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         return ResponseEntity.status(HttpStatus.OK).body(pageResult);
+    }
+
+    /**
+     * 根据spu的id查询spu的信息
+     * @param id
+     * @return
+     */
+    @GetMapping("{id}")
+    public ResponseEntity<Spu> querySpuBySpuId(@PathVariable("id")Long id){
+      Spu spu =this.spuService.querySpuBySpuId(id);
+      if (spu==null){
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+      }
+        return ResponseEntity.status(HttpStatus.OK).body(spu);
+
     }
 }

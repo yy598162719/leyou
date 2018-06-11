@@ -1,6 +1,6 @@
-package com.leyou.search.feign;
+package com.leyou.goodsDetail.client;
 
-import com.leyou.api.CategoryApi;
+import com.leyou.api.SpuApi;
 import org.springframework.cloud.openfeign.FeignClient;
 
 /**
@@ -8,5 +8,5 @@ import org.springframework.cloud.openfeign.FeignClient;
  * @date 2018/6/5
  */
 @FeignClient(value = "item-service")
-public interface CategoryClient extends CategoryApi {
+public interface SpuClient extends SpuApi {
 }

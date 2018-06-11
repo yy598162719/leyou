@@ -1,10 +1,12 @@
 package com.leyou.api;
 
 
-import com.leyou.common.PageResult;
 import com.leyou.bo.SpuBo;
+import com.leyou.common.PageResult;
+import com.leyou.pojo.Spu;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -31,4 +33,12 @@ public interface SpuApi {
             @RequestParam(value = "rows", defaultValue = "5") int rows,
             @RequestParam(value = "saleable", defaultValue = "0") int saleable
     );
+
+    /**
+     * 根据spu的id查询spu的信息
+     * @param id
+     * @return
+     */
+    @GetMapping("{id}")
+    ResponseEntity<Spu> querySpuBySpuId(@PathVariable("id")Long id);
 }

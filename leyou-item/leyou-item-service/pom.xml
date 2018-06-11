@@ -18,11 +18,6 @@
             <artifactId>leyou-item-interface</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.leyou.service</groupId>
-            <artifactId>leyou-item-interface</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
         <!--Eureka客户端-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

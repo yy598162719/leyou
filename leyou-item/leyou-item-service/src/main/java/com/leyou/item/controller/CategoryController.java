@@ -133,6 +133,11 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body(categories);
     }
 
+    /**
+     * 查询三级分类
+     * @param id
+     * @return
+     */
     @GetMapping("level/{id}")
     public ResponseEntity<List<Category>> queryParentByCid3(
             @PathVariable("id") Long id){

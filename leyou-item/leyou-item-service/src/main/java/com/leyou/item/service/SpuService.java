@@ -81,4 +81,9 @@ public class SpuService {
         pageResult.setItems(spuBos);
         return pageResult;
     }
+
+    public Spu querySpuBySpuId(Long id) {
+        Spu spu = this.spuMapper.selectByPrimaryKey(id);
+        return spu;
+    }
 }

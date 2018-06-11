@@ -6,6 +6,9 @@ import com.leyou.common.PageResult;
 import com.leyou.pojo.Sku;
 import com.leyou.pojo.SpuDetail;
 import com.leyou.search.LeYouSearchApplication;
+import com.leyou.search.client.CategoryClient;
+import com.leyou.search.client.GoodsClient;
+import com.leyou.search.client.SpuClient;
 import com.leyou.search.pojo.Goods;
 import com.leyou.search.repository.GoodsRepository;
 import com.leyou.utils.JsonUtils;
@@ -17,7 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
-import sun.font.TrueTypeFont;
 
 import java.util.*;
 

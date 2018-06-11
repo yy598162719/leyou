@@ -1,4 +1,4 @@
-package com.leyou.search.feign;
+package com.leyou.search.client;
 
 import com.leyou.api.GoodsApi;
 import org.springframework.cloud.openfeign.FeignClient;
