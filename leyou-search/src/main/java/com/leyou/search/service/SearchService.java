@@ -1,11 +1,8 @@
 package com.leyou.search.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.leyou.pojo.Brand;
-import com.leyou.pojo.Category;
-import com.leyou.search.client.BrandClient;
-import com.leyou.search.client.CategoryClient;
-import com.leyou.search.client.SpecClient;
+import com.leyou.pojo.*;
+import com.leyou.search.client.*;
 import com.leyou.search.pojo.Goods;
 import com.leyou.search.repository.GoodsRepository;
 import com.leyou.search.vo.SearchRequest;
@@ -53,6 +50,13 @@ public class SearchService {
 
     @Autowired
     private SpecClient specificationClient;
+
+    @Autowired
+    private SpuClient spuClient;
+
+    @Autowired
+    private GoodsClient goodsClient;
+
 
     private static Logger logger = LoggerFactory.getLogger(SearchService.class);
 
@@ -208,7 +212,7 @@ public class SearchService {
 
         // 解析聚合结果
         Map<String, Aggregation> aggs = this.template.query(
-                queryBuilder.build(),SearchResponse::getAggregations).asMap();
+                queryBuilder.build(), SearchResponse::getAggregations).asMap();
 
         // 解析数值类型
         for (Map.Entry<String, Double> entry : numericalInterval.entrySet()) {
@@ -325,4 +329,99 @@ public class SearchService {
         }
         return categories;
     }
+
+
+    public void createOrUpdateIndex(Long id) {
+
+        ResponseEntity<Spu> spuResponseEntity = this.spuClient.querySpuBySpuId(id);
+        if (!spuResponseEntity.hasBody()) {
+            logger.error("没有查到spu的信息");
+            throw new RuntimeException("没有查到spu的信息");
+        }
+        Spu spu = spuResponseEntity.getBody();
+        //创建一个goods对象
+        Goods goods = new Goods();
+
+        Long cid1 = spu.getCid1();
+        Long cid2 = spu.getCid2();
+        Long cid3 = spu.getCid3();
+
+        ResponseEntity<SpuDetail> spuDetailResponseEntity = goodsClient.querySpuDetailById(id);
+        ResponseEntity<List<Sku>> listResponseEntity = goodsClient.querySkuList(spu.getId());
+        ResponseEntity<List<String>> categoryNames = categoryClient.queryCategoryNamesBycids(Arrays.asList(cid1, cid2, cid3));
+        if (!spuDetailResponseEntity.hasBody() || !listResponseEntity.hasBody() || !categoryNames.hasBody()) {
+            logger.error("没有查到商品的详细信息的信息");
+            throw new RuntimeException("没有查到商品的详细信息信息");
+        }
+
+        //查询spuDetail
+        SpuDetail spuDetail = spuDetailResponseEntity.getBody();
+        //将可搜索的属性导入
+        String specifications = spuDetail.getSpecifications();
+        //将字符串转为对象
+        List<Map<String, Object>> maps = JsonUtils.nativeRead(specifications, new TypeReference<List<Map<String, Object>>>() {
+        });
+        //map用来存储可搜索属性
+        Map<String, Object> specMap = new HashMap<>();
+        for (Map<String, Object> map : maps) {
+            List<Map<String, Object>> paramsList = (List<Map<String, Object>>) map.get("params");
+            for (Map<String, Object> paramsMap : paramsList) {
+                Boolean searchable = (Boolean) paramsMap.get("searchable");
+                if (searchable) {
+                    if (paramsMap.get("v") != null) {
+                        specMap.put((String) paramsMap.get("k"), paramsMap.get("v"));
+                    } else if (paramsMap.get("options") != null) {
+                        specMap.put((String) paramsMap.get("k"), paramsMap.get("options"));
+                    }
+                }
+            }
+        }
+
+        //获取sku的信息
+        List<Sku> skuList = listResponseEntity.getBody();
+        //sku的信息是一个json对象，里面有很多对象
+        List<Map<String, Object>> skuData = new ArrayList<>();
+        //准备价格的集合,价格不能重复
+        HashSet<Long> prices = new HashSet<>();
+        for (Sku sku : skuList) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", sku.getId());
+            map.put("title", sku.getTitle());
+            map.put("image", StringUtils.isBlank(sku.getImages()) ? "" : sku.getImages().split(",")[0]);
+            map.put("price", sku.getPrice());
+            prices.add(sku.getPrice());
+            skuData.add(map);
+        }
+        //将sku的集合转为json
+        String skuDatas = JsonUtils.serialize(skuData);
+
+        //查询分类的集合
+        List<String> categoryNamesBody = categoryNames.getBody();
+        goods.setSubTitle(spu.getSubTitle());
+        goods.setSpecs(specMap);
+
+        goods.setSkus(skuDatas);
+
+        goods.setPrice(new ArrayList<>(prices));
+        goods.setAll(spu.getTitle() + StringUtils.join(categoryNamesBody, " "));//todo
+        goods.setBrandId(spu.getBrandId());
+
+        goods.setCreateTime(spu.getCreateTime());
+        goods.setId(spu.getId());
+
+        goods.setCid1(cid1);
+        goods.setCid2(cid2);
+        goods.setCid3(cid3);
+
+        goodsRepository.saveAll(Arrays.asList(goods));
+    }
+
+    /**
+     * 删除索引库的方法
+     * @param
+     */
+    public void deleteIndex(Long id) {
+        this.goodsRepository.deleteById(id);
+    }
+
 }

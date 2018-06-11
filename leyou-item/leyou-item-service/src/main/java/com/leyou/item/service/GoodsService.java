@@ -6,6 +6,10 @@ import com.leyou.pojo.Sku;
 import com.leyou.pojo.Spu;
 import com.leyou.pojo.SpuDetail;
 import com.leyou.pojo.Stock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +40,10 @@ public class GoodsService {
     @Autowired
     private StockMapper stockMapper;
 
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+
+    private static final Logger logger = LoggerFactory.getLogger(GoodsService.class);
     /**
      * 添加商品的方法
      *
@@ -67,6 +75,8 @@ public class GoodsService {
 
         addSkuAndStock(id, date, skus);
 
+        //添加完成后，发送消息
+        this.sendMessage(id,"insert");
     }
 
     /**
@@ -124,6 +134,9 @@ public class GoodsService {
             this.skuMapper.deleteByPrimaryKey(sku);
             this.stockMapper.deleteByPrimaryKey(sku.getId());
         }
+
+        //发送消息
+        this.sendMessage(id,"delete");
     }
 
     /**
@@ -202,6 +215,9 @@ public class GoodsService {
         Long id = spu.getId();
         List<Sku> newSkus = goods.getSkus();
         addSkuAndStock(id, date, newSkus);
+
+        //发送消息
+        this.sendMessage(id,"update");
     }
 
     /**
@@ -223,6 +239,23 @@ public class GoodsService {
 
         }
         return  skus;
+    }
+
+    /**
+     * 发送消息的方法
+     * @param id
+     * @param type
+     */
+    public void sendMessage(Long id,String type){
+
+        try {
+            this.amqpTemplate.convertAndSend("item."+type,id);
+        } catch (AmqpException e) {
+            e.printStackTrace();
+            logger.error("发送消息失败");
+        }
+
+
     }
 }
 

@@ -31,7 +31,7 @@ public class FileService {
 
     private Logger logger = LoggerFactory.getLogger(FileService.class);
 
-    private String destPath = "D:\\nginx-1.13.12\\html/";
+    private String destPath = "D:\\nginx-1.13.12\\html\\item/";
 
     public void createHtml(Long id) {
         //创建一个上下文对象
@@ -40,15 +40,16 @@ public class FileService {
         Map<String, Object> goodsDetails = this.goodsDetailService.getGoodsDetails(id);
         context.setVariables(goodsDetails);
         //准备一个输出流对象,关联一个临时文件
-        File temp = new File(destPath+id + ".html");
+        File temp = new File(id + ".html");
         //创建一个目标文件
         File dest = this.createPath(id);
         //创建一个临时文件的文件夹
-        File bak = new File(destPath+id + "_bak.html");
-        PrintWriter printWriter = null;
-        try {
-            printWriter = new PrintWriter(temp, "utf-8");
+        File bak = new File(id + "_bak.html");
+        try( PrintWriter printWriter = new PrintWriter(temp, "utf-8")) {
             templateEngine.process("item", context, printWriter);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } try {
             //如果目标文件存在，则先把目标文件转移i到临时文件，然后尝试覆盖
             if (dest.exists()) {
                 dest.renameTo(bak);
@@ -107,4 +108,8 @@ public class FileService {
 
     }
 
+    public void deleteHtml(Long id) {
+        File file = new File(destPath + id + ".html");
+        file.deleteOnExit();
+    }
 }
