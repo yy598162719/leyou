@@ -5,7 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.leyou.common.PageResult;
 import com.leyou.item.mapper.SpuMapper;
 import com.leyou.bo.SpuBo;
-import com.leyou.pojo.Spu;
+import com.leyou.cart.pojo.Spu;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

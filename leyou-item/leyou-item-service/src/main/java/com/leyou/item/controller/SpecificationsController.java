@@ -1,9 +1,8 @@
 package com.leyou.item.controller;
 
 import com.leyou.item.service.SpecificationsService;
-import com.leyou.pojo.Specification;
+import com.leyou.cart.pojo.Specification;
 import org.apache.commons.lang3.StringUtils;
-import org.aspectj.weaver.patterns.ThisOrTargetAnnotationPointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

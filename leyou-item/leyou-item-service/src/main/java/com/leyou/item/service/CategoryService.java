@@ -1,8 +1,7 @@
 package com.leyou.item.service;
 
 import com.leyou.item.mapper.CategoryMapper;
-import com.leyou.pojo.Category;
-import org.apache.commons.lang3.StringUtils;
+import com.leyou.cart.pojo.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

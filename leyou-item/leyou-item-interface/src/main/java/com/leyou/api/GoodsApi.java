@@ -1,7 +1,7 @@
 package com.leyou.api;
 
-import com.leyou.pojo.Sku;
-import com.leyou.pojo.SpuDetail;
+import com.leyou.cart.pojo.Sku;
+import com.leyou.cart.pojo.SpuDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,4 +36,14 @@ public interface GoodsApi {
      */
     @GetMapping("/sku/list")
     ResponseEntity<List<Sku>> querySkuList(@RequestParam("id") Long id);
+
+    /**
+     *查询sku的信息
+     * @param id
+     * @return
+     */
+    @GetMapping("sku/{id}")
+    public ResponseEntity<Sku> querySkuBySkuId(
+            @PathVariable("id")Long id
+    );
 }

@@ -1,7 +1,7 @@
 package com.leyou.search.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.leyou.pojo.*;
+import com.leyou.cart.pojo.*;
 import com.leyou.search.client.*;
 import com.leyou.search.pojo.Goods;
 import com.leyou.search.repository.GoodsRepository;

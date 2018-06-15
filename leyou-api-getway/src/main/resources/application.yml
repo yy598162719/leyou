@@ -24,7 +24,11 @@ zuul:
   routes:
     item-service: /item/** # 将商品微服务映射到/item/**
     search-service: /search/** # 搜索的微服务
-
+    user-service: /user/** #将用户微服务映射到user
+    auth-service: /auth/** #将授权中心映射到auth路径下
+    cart-service: /cart/** #购物车路径
+  add-host-header: true #携带hosy本身的请求头信息
+  sensitive-headers:  #敏感头设置为null
 #负载均衡的设置
 ribbon:
   ConnectTimeout: 250 # 连接超时时间(ms)
@@ -41,3 +45,15 @@ hystrix:
         isolation:
           thread:
             timeoutInMilliseconds: 10000 # 熔断超时时长：10000ms
+ly:
+  jwt:
+    pubKeyPath: H:/rsa/rsa.pub # 公钥地址
+    cookieName: LY_TOKEN # cookie的名称
+  filter:
+    allowPaths:
+      - /api/auth
+      - /api/search
+      - /api/user/register
+      - /api/user/check
+      - /api/user/send
+      - /api/item

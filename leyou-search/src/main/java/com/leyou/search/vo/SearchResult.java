@@ -1,10 +1,8 @@
 package com.leyou.search.vo;
 
 import com.leyou.common.PageResult;
-import com.leyou.pojo.Brand;
-import com.leyou.pojo.Category;
-import com.leyou.search.pojo.Goods;
-import com.sun.org.glassfish.external.statistics.BoundedRangeStatistic;
+import com.leyou.cart.pojo.Brand;
+import com.leyou.cart.pojo.Category;
 
 import java.util.ArrayList;
 import java.util.List;

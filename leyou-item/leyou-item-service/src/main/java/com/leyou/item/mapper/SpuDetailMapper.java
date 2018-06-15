@@ -1,6 +1,6 @@
 package com.leyou.item.mapper;
 
-import com.leyou.pojo.SpuDetail;
+import com.leyou.cart.pojo.SpuDetail;
 import tk.mybatis.mapper.common.Mapper;
 
 /**

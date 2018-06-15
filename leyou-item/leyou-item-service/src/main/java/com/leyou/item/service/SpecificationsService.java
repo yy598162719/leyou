@@ -1,7 +1,7 @@
 package com.leyou.item.service;
 
 import com.leyou.item.mapper.SpecificationsMapper;
-import com.leyou.pojo.Specification;
+import com.leyou.cart.pojo.Specification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

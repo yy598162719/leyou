@@ -211,18 +211,17 @@
                             <div class="fl title">
                                 <div class="control-group">
                                     <div class="controls">
-                                        <input autocomplete="off" type="text" disabled value="1" minnum="1"
-                                               class="itxt"/>
-                                        <a href="javascript:void(0)" class="increment plus">+</a>
-                                        <a href="javascript:void(0)" class="increment mins">-</a>
+                                        <input autocomplete="off" type="text" disabled  minnum="1"
+                                               class="itxt" v-model="num"/>
+                                        <a href="javascript:void(0)" class="increment plus" @click="increment">+</a>
+                                        <a href="javascript:void(0)" class="increment mins" @click="decrement">-</a>
                                     </div>
                                 </div>
                             </div>
                             <div class="fl">
                                 <ul class="btn-choose unstyled">
                                     <li>
-                                        <a href="success-cart.html" target="_blank"
-                                           class="sui-btn  btn-danger addshopcar">加入购物车</a>
+                                        <a href="JavaScript:;" target="_blank" @click="addToCart" class="sui-btn  btn-danger addshopcar">加入购物车</a>
                                     </li>
                                 </ul>
                             </div>
@@ -637,6 +636,7 @@
             specifications,
             indexes,
             ly,
+            num:1
         },
         components: {
             lyTop: () => import('/js/pages/top.js')
@@ -661,6 +661,23 @@
                 return this.specifications;
             }
         },
+        methods:{
+            increment(){
+                if(this.num<99999999) {
+                    this.num++;
+                }
+            },
+            decrement(){
+                if(this.num>1){
+                    this.num--;
+                }
+            },
+            addToCart(){
+               ly.store.set("cartParam",{num:this.num,skuId:this.sku.id});
+               window.location.href="/cart.html"
+            },
+
+        }
     });
 </script>
 <script type="text/javascript" src="/js/plugins/jquery/jquery.min.js"></script>

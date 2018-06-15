@@ -1,6 +1,6 @@
 package com.leyou.item.mapper;
 
-import com.leyou.pojo.Brand;
+import com.leyou.cart.pojo.Brand;
 import org.apache.ibatis.annotations.*;
 import tk.mybatis.mapper.additional.idlist.SelectByIdListMapper;
 import tk.mybatis.mapper.common.Mapper;

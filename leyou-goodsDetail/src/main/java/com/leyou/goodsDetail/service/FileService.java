@@ -4,7 +4,9 @@ import com.leyou.utils.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -31,7 +33,8 @@ public class FileService {
 
     private Logger logger = LoggerFactory.getLogger(FileService.class);
 
-    private String destPath = "D:\\nginx-1.13.12\\html\\item/";
+    @Value("${ly.thymeleaf.destPath}")
+    private String destPath ;
 
     public void createHtml(Long id) {
         //创建一个上下文对象
@@ -47,15 +50,12 @@ public class FileService {
         File bak = new File(id + "_bak.html");
         try( PrintWriter printWriter = new PrintWriter(temp, "utf-8")) {
             templateEngine.process("item", context, printWriter);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } try {
             //如果目标文件存在，则先把目标文件转移i到临时文件，然后尝试覆盖
             if (dest.exists()) {
                 dest.renameTo(bak);
             }
             //用新文件将就文件覆盖
-            temp.renameTo(dest);
+            FileCopyUtils.copy(temp,dest);
             //删除成功将备份删除
             bak.delete();
         } catch (Exception e) {

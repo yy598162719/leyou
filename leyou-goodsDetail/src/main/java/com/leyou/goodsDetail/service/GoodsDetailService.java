@@ -5,7 +5,7 @@ import com.leyou.goodsDetail.client.BrandClient;
 import com.leyou.goodsDetail.client.CategoryClient;
 import com.leyou.goodsDetail.client.GoodsClient;
 import com.leyou.goodsDetail.client.SpuClient;
-import com.leyou.pojo.*;
+import com.leyou.cart.pojo.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

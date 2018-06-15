@@ -1,6 +1,6 @@
 package com.leyou.bo;
 
-import com.leyou.pojo.Spu;
+import com.leyou.cart.pojo.Spu;
 
 /**
  * @author Qin PengCheng

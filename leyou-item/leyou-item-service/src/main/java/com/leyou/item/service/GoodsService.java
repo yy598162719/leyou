@@ -2,10 +2,10 @@ package com.leyou.item.service;
 
 import com.leyou.bo.GoodsBo;
 import com.leyou.item.mapper.*;
-import com.leyou.pojo.Sku;
-import com.leyou.pojo.Spu;
-import com.leyou.pojo.SpuDetail;
-import com.leyou.pojo.Stock;
+import com.leyou.cart.pojo.Sku;
+import com.leyou.cart.pojo.Spu;
+import com.leyou.cart.pojo.SpuDetail;
+import com.leyou.cart.pojo.Stock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
@@ -256,6 +256,16 @@ public class GoodsService {
         }
 
 
+    }
+
+    /**
+     * 根据sku的id查询sku的信息
+     * @param id
+     * @return
+     */
+    public Sku querySkuBySkuId(Long id) {
+        Sku sku = this.skuMapper.selectByPrimaryKey(id);
+        return sku;
     }
 }
 

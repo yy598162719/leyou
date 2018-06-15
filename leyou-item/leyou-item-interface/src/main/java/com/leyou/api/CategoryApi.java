@@ -2,9 +2,8 @@ package com.leyou.api;
 
 
 
-import com.leyou.pojo.Category;
+import com.leyou.cart.pojo.Category;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

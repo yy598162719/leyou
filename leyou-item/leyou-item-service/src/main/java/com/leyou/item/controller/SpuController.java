@@ -3,13 +3,11 @@ package com.leyou.item.controller;
 import com.leyou.common.PageResult;
 import com.leyou.item.service.SpuService;
 import com.leyou.bo.SpuBo;
-import com.leyou.pojo.Spu;
+import com.leyou.cart.pojo.Spu;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.swing.plaf.SpinnerUI;
 
 /**
  * @author Qin PengCheng
