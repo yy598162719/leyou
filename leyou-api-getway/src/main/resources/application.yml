@@ -27,6 +27,7 @@ zuul:
     user-service: /user/** #将用户微服务映射到user
     auth-service: /auth/** #将授权中心映射到auth路径下
     cart-service: /cart/** #购物车路径
+    order-service: /order/**
   add-host-header: true #携带hosy本身的请求头信息
   sensitive-headers:  #敏感头设置为null
 #负载均衡的设置

@@ -133,6 +133,10 @@ public class CartService {
         }
     }
 
+    /**
+     * 删除购物车
+     * @param skuId
+     */
     public void daleteCart(Long skuId) {
         //首先得到登陆用户的信息
         UserInfo userInfo = LoginInterceptor.getUserInfo();

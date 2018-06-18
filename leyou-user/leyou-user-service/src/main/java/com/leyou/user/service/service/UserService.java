@@ -66,7 +66,7 @@ public class UserService {
             map.put("code",code);
             map.put("phone",phone);
             /*rabbitmq发送消息*/
-           /* this.amqpTemplate.convertAndSend("ly.sms.exchange","sms.verify.code",map);*/
+            this.amqpTemplate.convertAndSend("ly.sms.exchange","sms.verify.code",map);
             //把code放到redis
             this.redisTemplate.opsForValue().set(KEY_PREFIX+phone,code,5, TimeUnit.MINUTES);
         } catch (AmqpException e) {

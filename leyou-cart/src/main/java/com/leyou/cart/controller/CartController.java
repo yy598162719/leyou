@@ -50,6 +50,11 @@ public class CartController {
     }
 
 
+    /**
+     * 删除商品
+     * @param skuId
+     * @return
+     */
     @DeleteMapping("{skuId}")
     public ResponseEntity<Void> deleteCart(
             @PathVariable("skuId") String skuId
@@ -58,4 +63,14 @@ public class CartController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+   /* @PostMapping
+    public ResponseEntity<Void> addCart(
+            List<Cart> list
+    ){
+        for (Cart cart : list) {
+        this.cartService.addCart(cart);
+        }
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }*/
 }
+

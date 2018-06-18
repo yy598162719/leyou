@@ -79,7 +79,5 @@ public class AuthController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-
     }
 }

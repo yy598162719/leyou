@@ -108,6 +108,10 @@ public class FileService {
 
     }
 
+    /**
+     * 删除的方法
+     * @param id
+     */
     public void deleteHtml(Long id) {
         File file = new File(destPath + id + ".html");
         file.deleteOnExit();
